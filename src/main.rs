@@ -1,70 +1,131 @@
+mod get_valid_placements;
+mod grid;
+mod solver;
+
+use crate::solver::solve_game;
+use grid::Grid;
 use rand::prelude::*;
+use serde::Serialize;
+use serde_json;
+use std::fs;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::time::Instant;
 
-fn display_grid(grid: [[i32; 9]; 9]) {
-    for row_index in 0..grid.len() {
-        for col_index in 0..grid[row_index].len() {
-            print!("{:?}", grid[row_index][col_index])
-        }
-        println!()
-    }
-}
-
-fn pick_number(options: &mut Vec<i32>) -> i32 {
+fn random_one_nine() -> usize {
     let mut rng = rand::rng();
-    options.shuffle(&mut rng);
-    let item = options[0];
-    options.remove(0);
-    // generate a random number 1-9,  taking into account the not allowed values passed
-    return item;
+    let mut digits = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    digits.shuffle(&mut rng);
+    return digits[0];
 }
 
-fn generate() -> &'static str {
-    let mut grid: [[i32; 9]; 9] = [[0; 9]; 9];
+/*
+ * This function needs to take in a grid and return true or false if a number is placed, then call itself on the next cell
+ */
+fn fill_grid(grid: &mut Grid, grid_state: Grid, cell_index: usize) -> bool {
+    let mut grid_clone = grid_state.clone();
+    let total_size = grid.len() * grid[0].len();
 
-    // generate the first row of the grid
-    let v = &mut vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
-    for (_, item) in grid[0].iter_mut().enumerate() {
-        // Get all of the numbers in the current row
-        *item = pick_number(v);
+    if cell_index >= total_size {
+        *grid = grid_state;
+        return true;
     }
 
-    for row_index in 1..9 {
-        let row_allowed_numbers = &mut vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
-        for col_index in 0..9 {
-            let allowed_numbers = &mut row_allowed_numbers.clone();
+    let mut rng = rand::rng();
+    let mut possible_values = get_valid_placements::get_possible_values(grid_clone, cell_index);
 
-            // allowed numbers for columns
-            for r in 0..9 {
-                let col_item = grid[r][col_index];
-                allowed_numbers.retain(|&x| x != col_item);
-            }
+    if possible_values.len() < 1 {
+        return false;
+    }
 
-            // allowed numbers for the grid major (3x3)
-            let major_grid_row_offset = (row_index / 3) * 3;
-            let major_grid_col_offset = (col_index / 3) * 3;
-            // get all numbers in the major grid
-            for major_minor_row in 0..3 {
-                for major_minor_col in 0..3 {
-                    let major_minor_item = grid[major_minor_row + major_grid_row_offset]
-                        [major_minor_col + major_grid_col_offset];
-                    println!("Major minor item: {:?}", major_minor_item);
-                    allowed_numbers.retain(|&x| x != major_minor_item);
-                }
-            }
+    possible_values.shuffle(&mut rng);
+    for _ in 0..possible_values.len() {
+        grid_clone[cell_index / 9][cell_index % 9] = possible_values.remove(0);
+        // remove that possible value we dont need it again
 
-            // Find all the allowed numbers for this cell, and pick one!
-            println!("{:?}", allowed_numbers);
-            display_grid(grid);
-            let picked_number = pick_number(allowed_numbers);
-            row_allowed_numbers.retain(|&x| x != picked_number);
-            grid[row_index][col_index] = picked_number;
+        if fill_grid(grid, grid_clone, cell_index + 1) {
+            return true;
         }
     }
 
-    return "Hello!";
+    return false;
+}
+
+#[derive(Serialize, Hash)]
+struct GenerationResult {
+    squares: usize,
+    solution: Grid,
+    puzzle: Grid,
+}
+
+fn calculate_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
+}
+
+fn generate() -> GenerationResult {
+    let grid: &mut Grid = &mut [[0; 9]; 9];
+
+    let start = Instant::now();
+    fill_grid(grid, grid.clone(), 0);
+    let elapsed = start.elapsed().as_micros();
+
+    // no we have made a perfectly valid puzzle
+    println!("Generated raw in {elapsed} micros");
+
+    let mut cells = grid[0].len() * grid.len();
+    let solution = grid.clone();
+    let mut last_safe_grid = grid.clone();
+    while solve_game(*grid) {
+        let row_index = random_one_nine();
+        let col_index = random_one_nine();
+
+        if grid[row_index][col_index] != 0 {
+            last_safe_grid = grid.clone();
+            cells -= 1;
+            grid[row_index][col_index] = 0
+        }
+    }
+
+    let full_elapsed = start.elapsed().as_micros();
+
+    println!("Kept {cells} items, done in {full_elapsed} micros");
+    return GenerationResult {
+        squares: cells,
+        solution,
+        puzzle: last_safe_grid,
+    };
+}
+
+fn save_puzzle(g: &mut GenerationResult) -> serde_json::Result<()> {
+    let p_json = serde_json::to_string(g)?;
+
+    let h = calculate_hash(g);
+    let directory_path = format!("./puzzles/{:?}", g.squares);
+    let file_path = format!("{directory_path}/{:?}.puzzle", h);
+
+    println!("{file_path}");
+
+    match fs::create_dir_all(&directory_path) {
+        Err(e) => println!("{:?}", e),
+        Ok(_) => {}
+    };
+
+    match fs::write(&file_path, p_json) {
+        Err(e) => println!("{:?}", e),
+        Ok(_) => println!("File saved!"),
+    };
+
+    return Ok(());
 }
 
 fn main() {
-    let puzzle = generate();
-    println!("{puzzle}");
+    loop {
+        let puzzle = &mut generate();
+
+        let a = save_puzzle(puzzle);
+        if a.is_err() {
+            println!("A error")
+        }
+    }
 }

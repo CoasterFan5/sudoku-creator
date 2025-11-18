@@ -1,6 +1,6 @@
 use crate::grid::Grid;
 
-pub fn get_possible_values(grid: Grid, cell_index: usize) -> Vec<i32> {
+pub fn get_possible_values(grid: &Grid, cell_index: usize) -> Vec<i32> {
     let mut base = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     // remove all existing numbers in the row
@@ -13,6 +13,9 @@ pub fn get_possible_values(grid: Grid, cell_index: usize) -> Vec<i32> {
     let col_index = cell_index % 9;
     for t_row_index in 0..9 {
         base.retain(|&x| x != grid[t_row_index][col_index]);
+        if base.len() < 1 {
+            return base;
+        }
     }
 
     // remove all existing numbers in the major grid (the 3x3)
@@ -23,9 +26,11 @@ pub fn get_possible_values(grid: Grid, cell_index: usize) -> Vec<i32> {
         for t_col_index_raw in 0..3 {
             let true_col_index = major_col_offset + t_col_index_raw;
             base.retain(|&x| x != grid[true_row_index][true_col_index]);
+            if base.len() < 1 {
+                return base;
+            }
         }
     }
-    // iterate
 
     return base;
 }

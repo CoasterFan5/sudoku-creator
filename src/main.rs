@@ -1,5 +1,7 @@
 mod get_valid_placements;
 mod grid;
+mod placement_manager;
+mod remover;
 mod solver;
 
 use crate::solver::solve_game;
@@ -10,13 +12,6 @@ use serde_json;
 use std::fs;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::time::Instant;
-
-fn random_one_nine() -> usize {
-    let mut rng = rand::rng();
-    let mut digits = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-    digits.shuffle(&mut rng);
-    return digits[0];
-}
 
 /*
  * This function needs to take in a grid and return true or false if a number is placed, then call itself on the next cell
@@ -31,7 +26,7 @@ fn fill_grid(grid: &mut Grid, grid_state: Grid, cell_index: usize) -> bool {
     }
 
     let mut rng = rand::rng();
-    let mut possible_values = get_valid_placements::get_possible_values(grid_clone, cell_index);
+    let mut possible_values = get_valid_placements::get_possible_values(&grid_clone, cell_index);
 
     if possible_values.len() < 1 {
         return false;
@@ -74,7 +69,7 @@ fn generate() -> GenerationResult {
     // no we have made a perfectly valid puzzle
     println!("Generated raw in {elapsed} micros");
 
-    let mut cells = grid[0].len() * grid.len();
+    let cells = grid[0].len() * grid.len();
     let solution = grid.clone();
     // create a vec of the indexes
 
@@ -85,7 +80,7 @@ fn generate() -> GenerationResult {
     grid_index_vec.shuffle(&mut rng);
     println!("{:?}", grid_index_vec);
 
-    loop {
+    /*loop {
         let mut has_removed = false;
         for cell_index in &grid_index_vec {
             let row_index = cell_index / 9;
@@ -110,7 +105,9 @@ fn generate() -> GenerationResult {
         if !has_removed {
             break;
         }
-    }
+    } */
+
+    remover::remover(*grid);
 
     let full_elapsed = start.elapsed().as_micros();
 
@@ -145,12 +142,12 @@ fn save_puzzle(g: &mut GenerationResult) -> serde_json::Result<()> {
 }
 
 fn main() {
-    loop {
-        let puzzle = &mut generate();
+    //loop {
+    let puzzle = &mut generate();
 
-        let a = save_puzzle(puzzle);
-        if a.is_err() {
-            println!("A error")
-        }
+    let a = save_puzzle(puzzle);
+    if a.is_err() {
+        println!("A error")
     }
+    //}
 }

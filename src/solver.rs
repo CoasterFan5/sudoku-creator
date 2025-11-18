@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use crate::{get_valid_placements::get_possible_values, grid::Grid};
 
 /*
@@ -15,7 +17,12 @@ pub fn solve_game(grid: Grid) -> bool {
         }
     }
 
-    let solution_count = solver(grid, 0, &zero_index_vec);
+    // create placement manager (this will help with calculations heavily)
+
+    let s = Instant::now();
+    let solution_count = solver(grid, 0, &zero_index_vec, 0);
+    let elapsed = s.elapsed().as_micros();
+    eprintln!("Solve in {elapsed}micros");
     return solution_count == 1;
 }
 
@@ -24,7 +31,11 @@ pub fn solve_game(grid: Grid) -> bool {
  * and fill it with one and attempt to fill the rest of the grid, returing the result
  * of a recursive call to this function, if there are none we return None
  */
-fn solver(grid: Grid, zero_index: usize, zero_index_vec: &Vec<usize>) -> i32 {
+fn solver(mut grid: Grid, zero_index: usize, zero_index_vec: &Vec<usize>, sol_count: i32) -> i32 {
+    if sol_count >= 2 {
+        return 0;
+    }
+
     if zero_index >= zero_index_vec.len() {
         return 1;
     }
@@ -36,20 +47,22 @@ fn solver(grid: Grid, zero_index: usize, zero_index_vec: &Vec<usize>) -> i32 {
     let value = grid[row_index][col_index];
 
     if value != 0 {
-        return solver(grid, index + 1, zero_index_vec);
+        return solver(grid, zero_index + 1, zero_index_vec, 0);
     } else {
         // get the possible values
-        let possible_values = get_possible_values(grid, index);
+        let possible_values = get_possible_values(&grid, index);
 
         if possible_values.len() < 1 {
             return 0;
         }
 
-        let grid_clone = &mut grid.clone();
-        let mut sol = 0;
+        let mut sol = sol_count;
         for v in possible_values {
-            grid_clone[row_index][col_index] = v;
-            sol += solver(*grid_clone, index + 1, zero_index_vec)
+            grid[row_index][col_index] = v;
+            sol += solver(grid, zero_index + 1, zero_index_vec, sol);
+            if sol >= 2 {
+                break;
+            }
         }
 
         return sol;

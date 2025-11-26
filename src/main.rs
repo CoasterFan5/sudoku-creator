@@ -1,8 +1,9 @@
+mod greedy_remover;
 mod grid;
 mod remover;
 mod solver;
 
-use crate::{grid::Grid, remover::remover};
+use crate::{greedy_remover::greedy_remover, grid::Grid, remover::remover};
 use rand::prelude::*;
 
 use std::time::Instant;
@@ -45,7 +46,8 @@ fn generate() -> Grid {
     println!("Generated raw in {elapsed} micros");
     println!("Starting remover...");
     start = Instant::now();
-    remover(&mut grid);
+    greedy_remover(&mut grid);
+    grid.display();
     println!("Removal done in {:?}", start.elapsed().as_micros());
 
     // no we have made a perfectly valid puzzle

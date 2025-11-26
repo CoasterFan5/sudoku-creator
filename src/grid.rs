@@ -62,4 +62,15 @@ impl Grid {
     pub fn get_value(&self, cell_index: usize) -> u16 {
         return self.values[cell_index];
     }
+
+    pub fn display(&self) {
+        for r in 0..9 {
+            for c in 0..9 {
+                let real_index = r * 9 + c;
+                let value = &self.get_value(real_index);
+                print!("{value}")
+            }
+            println!()
+        }
+    }
 }

@@ -1,9 +1,6 @@
 use rand::seq::SliceRandom;
 
-use crate::{
-    grid::{self, Grid},
-    solver::solve_game,
-};
+use crate::{grid::Grid, solver::solve_game};
 
 pub fn greedy_remover(g: &mut Grid) -> &mut Grid {
     // get all the indexes
@@ -22,9 +19,12 @@ pub fn greedy_remover(g: &mut Grid) -> &mut Grid {
         has_removed = false;
         for index in &index_vec {
             let old_value = g.get_value(*index);
+            if old_value == 0 {
+                continue;
+            }
             g.place_value(*index, 0);
             if solve_game(g) {
-                has_removed = true
+                has_removed = true;
             } else {
                 g.place_value(*index, old_value);
             }

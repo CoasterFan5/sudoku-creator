@@ -3,7 +3,7 @@ mod grid;
 mod remover;
 mod solver;
 
-use crate::{greedy_remover::greedy_remover, grid::Grid, remover::remover};
+use crate::{greedy_remover::greedy_remover, grid::Grid, solver::solve_game};
 use rand::prelude::*;
 
 use std::time::Instant;
@@ -50,8 +50,13 @@ fn generate() -> Grid {
     grid.display();
     println!("Removal done in {:?}", start.elapsed().as_micros());
 
+    println!("Checking validity last time.");
+
+    if !solve_game(&mut grid) {
+        println!("Game invalid")
+    }
+
     // no we have made a perfectly valid puzzle
-    println!("{:?}", grid.values);
     return grid;
 }
 

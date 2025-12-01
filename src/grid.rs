@@ -67,10 +67,17 @@ impl Grid {
         for r in 0..9 {
             for c in 0..9 {
                 let real_index = r * 9 + c;
-                let value = &self.get_value(real_index);
-                print!("{value}")
+
+                let value = self.get_value(real_index);
+                let digit = if value == 0 {
+                    0
+                } else {
+                    (value.trailing_zeros() as u8) + 1
+                };
+                print!("{digit} ")
             }
             println!()
         }
+        println!("-- -- -- -- -- -- -- ")
     }
 }

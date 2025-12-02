@@ -1,3 +1,7 @@
+use crate::grid_utils::{
+    col_index_from_true_index, house_index_from_row_col, row_index_from_true_index,
+};
+
 pub struct Grid {
     pub values: [u16; 81],
     row_valid_items: [u16; 9],
@@ -18,9 +22,9 @@ impl Grid {
     }
 
     pub fn place_value(&mut self, cell_index: usize, value: CellValue) {
-        let row_index = cell_index / 9;
-        let col_index = cell_index % 9;
-        let house_index = (row_index / 3) * 3 + (col_index / 3);
+        let row_index = row_index_from_true_index(cell_index);
+        let col_index = col_index_from_true_index(cell_index);
+        let house_index = house_index_from_row_col(row_index, col_index);
 
         let old_value = self.values[cell_index];
 
@@ -35,7 +39,11 @@ impl Grid {
     }
 
     pub fn get_valid_placements(&self, cell_index: usize) -> Vec<CellValue> {
-        return self.get_valid_placements_with_row_col(cell_index / 9, cell_index % 9);
+        if self.get_value(cell_index) == 0 {
+            return self.get_valid_placements_with_row_col(cell_index / 9, cell_index % 9);
+        } else {
+            return vec![];
+        }
     }
 
     pub fn get_valid_placements_with_row_col(

@@ -1,9 +1,13 @@
 mod greedy_remover;
 mod grid;
+mod grid_utils;
+mod human_solver;
 mod remover;
 mod solver;
 
-use crate::{greedy_remover::greedy_remover, grid::Grid, solver::solve_game};
+use crate::{
+    greedy_remover::greedy_remover, grid::Grid, human_solver::human_solver, solver::solve_game,
+};
 use rand::prelude::*;
 
 use std::time::Instant;
@@ -55,6 +59,11 @@ fn generate() -> Grid {
     if !solve_game(&mut grid) {
         println!("Game invalid")
     }
+
+    // we need to get the score
+    println!("Scoring");
+    let score = human_solver(&mut grid);
+    println!("Score: {score}");
 
     // no we have made a perfectly valid puzzle
     return grid;

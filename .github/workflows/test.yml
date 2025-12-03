@@ -1,0 +1,10 @@
+on: ["push", "pull_request"]
+
+name: Cargo test
+
+jobs:
+  cargo_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo test --verbose

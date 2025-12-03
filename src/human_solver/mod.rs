@@ -1,6 +1,5 @@
 use crate::{
     grid::Grid,
-    grid_utils::{col_index_from_true_index, row_index_from_true_index},
     human_solver::{
         hidden_single::solve_hidden_single, naked_single::solve_naked_single,
         solve_details::SolveDetails,
@@ -8,6 +7,7 @@ use crate::{
 };
 
 mod hidden_single;
+mod locked_candidate_pointing;
 mod naked_single;
 mod solve_details;
 
@@ -25,44 +25,48 @@ pub fn human_solver(grid: &mut Grid) -> i32 {
 
     let human_solve_techiques = [
         HumanSolveTechnique {
-            score: 4,
+            score: 1,
             solver: solve_naked_single,
             human_name: "Naked Single",
         },
         HumanSolveTechnique {
-            score: 14,
+            score: 5,
             solver: solve_hidden_single,
             human_name: "Hidden Single",
         },
+        /*HumanSolveTechnique {
+            score: 15,
+            solver: locked_candidate_pointing,
+            human_name: "Locked Candidate Pointing",
+        },*/
     ];
     let mut score = 0;
 
     loop {
-        let mut placed = false;
+        let mut used_technique = false;
         for item in &human_solve_techiques {
             match (item.solver)(grid) {
                 None => {}
                 Some(value) => {
                     score += item.score;
-                    let row_index = row_index_from_true_index(value.true_index) + 1;
-                    let col_index = col_index_from_true_index(value.true_index) + 1;
-                    placed = true;
-                    let formatted = format!(
-                        "{:?} r{row_index}c{col_index}={:?}",
-                        item.human_name,
-                        value.value.trailing_zeros() + 1
-                    );
+                    let formatted = format!("{:?} {:?}", item.human_name, value.log_statement);
+                    used_technique = true;
                     techniques_used.push(formatted);
+                    break;
                 }
             }
         }
-        if !placed {
-            println!("Failed to solve!");
-            for str in techniques_used {
-                println!("{str}");
-            }
-            break;
+        if used_technique {
+            continue;
         }
+        for str in techniques_used {
+            println!("{str}");
+        }
+        if !grid.is_solved() {
+            println!("Failed to solve!");
+        }
+
+        break;
     }
 
     return score;

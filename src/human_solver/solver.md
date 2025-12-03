@@ -20,6 +20,6 @@ r4c1
 
 ## Scoring Values
 ```
-Naked single: 1
-Hidden Single: 4
+Naked Single: 1
+Hidden Single: 5
 ```

@@ -21,6 +21,49 @@ impl Grid {
         };
     }
 
+    #[allow(dead_code)]
+    pub fn load(&mut self, values: [usize; 81]) {
+        for (index, item) in values.iter().enumerate() {
+            if *item == 0 {
+                self.place_value(index, 0);
+            } else {
+                self.place_value(index, 1 << (*item - 1));
+            }
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_values(&self) -> [u32; 81] {
+        let mut new_vals: [u32; 81] = [0; 81];
+        for i in 0..81 {
+            let v = self.get_value(i);
+            if v == 0 {
+                new_vals[i] = 0;
+            } else {
+                new_vals[i] = v.trailing_zeros() + 1;
+            }
+        }
+        return new_vals;
+    }
+
+    #[allow(dead_code)]
+    pub fn load_str(&mut self, s: &'static str) -> bool {
+        let vals: Vec<char> = s.chars().collect();
+        println!("{:?}", vals);
+        let mut items: [usize; 81] = [0; 81];
+        for i in 0..81 {
+            let val = vals[i].to_digit(10);
+            match val {
+                Some(v) => {
+                    items[i] = v as usize;
+                }
+                None => items[i] = 0,
+            }
+        }
+        self.load(items);
+        return true;
+    }
+
     pub fn place_value(&mut self, cell_index: usize, value: CellValue) {
         let row_index = row_index_from_true_index(cell_index);
         let col_index = col_index_from_true_index(cell_index);
@@ -88,4 +131,46 @@ impl Grid {
         }
         println!("-- -- -- -- -- -- -- ")
     }
+
+    pub fn is_solved(&self) -> bool {
+        for i in 0..81 {
+            if self.get_value(i) != 0 {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+#[test]
+fn test_grid_load_str() {
+    let g = &mut Grid::new();
+    g.load_str("2...38.6.3....2.....5..6238..4.2..53952.....673..1.4.282.7..3........829.9.28...7");
+    g.display();
+    assert!(
+        g.get_values()
+            == [
+                2, 0, 0, 0, 3, 8, 0, 6, 0, 3, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 0, 0, 6, 2, 3, 8, 0,
+                0, 4, 0, 2, 0, 0, 5, 3, 9, 5, 2, 0, 0, 0, 0, 0, 6, 7, 3, 0, 0, 1, 0, 4, 0, 2, 8, 2,
+                0, 7, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 8, 2, 9, 0, 9, 0, 2, 8, 0, 0, 0, 7
+            ]
+    )
+}
+
+#[test]
+fn test_grid_load_str_equals_grid_load() {
+    let g = &mut Grid::new();
+    let g2 = &mut Grid::new();
+
+    g.load([
+        2, 0, 0, 0, 3, 8, 0, 6, 0, 3, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 0, 0, 6, 2, 3, 8, 0, 0, 4,
+        0, 2, 0, 0, 5, 3, 9, 5, 2, 0, 0, 0, 0, 0, 6, 7, 3, 0, 0, 1, 0, 4, 0, 2, 8, 2, 0, 7, 0, 0,
+        3, 0, 0, 0, 0, 0, 0, 0, 0, 8, 2, 9, 0, 9, 0, 2, 8, 0, 0, 0, 7,
+    ]);
+
+    g2.load_str(
+        "2...38.6.3....2.....5..6238..4.2..53952.....673..1.4.282.7..3........829.9.28...7",
+    );
+
+    assert!(g.get_values() == g2.get_values());
 }

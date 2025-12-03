@@ -38,7 +38,12 @@ pub fn solve_hidden_single(grid: &mut Grid) -> Option<SolveDetails> {
                 grid.place_value(i, valid);
                 return Some(SolveDetails {
                     true_index: i,
-                    value: valid,
+                    log_statement: format!(
+                        "r{:?}c{:?}={:?} (row)",
+                        row_index + 1,
+                        col_index + 1,
+                        valid.trailing_zeros() + 1
+                    ),
                 });
             }
             // Col check
@@ -56,7 +61,12 @@ pub fn solve_hidden_single(grid: &mut Grid) -> Option<SolveDetails> {
                 grid.place_value(i, valid);
                 return Some(SolveDetails {
                     true_index: i,
-                    value: valid,
+                    log_statement: format!(
+                        "r{:?}c{:?}={:?} (col)",
+                        row_index + 1,
+                        col_index + 1,
+                        valid.trailing_zeros() + 1
+                    ),
                 });
             }
             //House check
@@ -74,11 +84,80 @@ pub fn solve_hidden_single(grid: &mut Grid) -> Option<SolveDetails> {
                 grid.place_value(i, valid);
                 return Some(SolveDetails {
                     true_index: i,
-                    value: valid,
+                    log_statement: format!(
+                        "r{:?}c{:?}={:?} (house)",
+                        row_index + 1,
+                        col_index + 1,
+                        valid.trailing_zeros() + 1
+                    ),
                 });
             }
         }
     }
 
     return None;
+}
+
+#[test]
+fn test_hidden_single_row() {
+    let grid = &mut Grid::new();
+    grid.load_str(
+        ".....3.7919427....7....9....5.89271..4.157....71634.8....7....6.1.9453274.73.....",
+    );
+    match solve_hidden_single(grid) {
+        None => {
+            assert!(false)
+        }
+        Some(_) => {
+            assert!(true)
+        }
+    }
+}
+
+#[test]
+fn test_hidden_single_col() {
+    let grid = &mut Grid::new();
+    grid.load_str(
+        "......63.7.31628...56483......6.75..827....69.658..........671.17495832663.......",
+    );
+    match solve_hidden_single(grid) {
+        None => {
+            assert!(false)
+        }
+        Some(_) => {
+            assert!(true)
+        }
+    }
+}
+
+#[test]
+fn test_hidden_single_house() {
+    let grid = &mut Grid::new();
+    grid.load_str(
+        "9...4.8.1..713.......5..2..574.2....6.841.9.7....7...41623.4...7..2614..843.....2",
+    );
+    match solve_hidden_single(grid) {
+        None => {
+            assert!(false)
+        }
+        Some(_) => {
+            assert!(true)
+        }
+    }
+}
+
+#[test]
+fn test_hidden_single_fail() {
+    let grid = &mut Grid::new();
+    grid.load_str(
+        "9...4.8.1..713.......59.2..574.2....6.841.9.7....7...4162384...7..2614..843.5...2",
+    );
+    match solve_hidden_single(grid) {
+        None => {
+            assert!(true)
+        }
+        Some(_) => {
+            assert!(false)
+        }
+    }
 }

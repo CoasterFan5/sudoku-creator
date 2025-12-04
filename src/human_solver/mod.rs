@@ -1,8 +1,9 @@
 use crate::{
     grid::Grid,
     human_solver::{
-        hidden_single::solve_hidden_single, naked_single::solve_naked_single,
-        solve_details::SolveDetails,
+        hidden_single::solve_hidden_single,
+        locked_candidate_pointing::solve_locked_candidate_pointing,
+        naked_single::solve_naked_single, solve_details::SolveDetails,
     },
 };
 
@@ -34,11 +35,11 @@ pub fn human_solver(grid: &mut Grid) -> i32 {
             solver: solve_hidden_single,
             human_name: "Hidden Single",
         },
-        /*HumanSolveTechnique {
+        HumanSolveTechnique {
             score: 15,
-            solver: locked_candidate_pointing,
+            solver: solve_locked_candidate_pointing,
             human_name: "Locked Candidate Pointing",
-        },*/
+        },
     ];
     let mut score = 0;
 

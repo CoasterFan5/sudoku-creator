@@ -13,7 +13,7 @@ pub fn house_index_from_row_col(row_index: usize, col_index: usize) -> usize {
 /**
  * Prefer `house_index_from_row_col` as this removes 2 calculations.
  */
-pub fn _house_index_from_true_index(true_index: usize) -> usize {
+pub fn house_index_from_true_index(true_index: usize) -> usize {
     let row_index = row_index_from_true_index(true_index);
     let col_index = col_index_from_true_index(true_index);
     return house_index_from_row_col(row_index, col_index);

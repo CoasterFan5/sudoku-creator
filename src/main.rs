@@ -49,10 +49,13 @@ fn generate() -> Grid {
     let elapsed = start.elapsed().as_micros();
     println!("Generated raw in {elapsed} micros");
     println!("Starting remover...");
-    start = Instant::now();
+    let removal_start = Instant::now();
     greedy_remover(&mut grid);
+    println!(
+        "Removal done in {:?} micros",
+        removal_start.elapsed().as_micros()
+    );
     grid.display();
-    println!("Removal done in {:?}", start.elapsed().as_micros());
 
     println!("Checking validity last time.");
 
@@ -61,9 +64,13 @@ fn generate() -> Grid {
     }
 
     // we need to get the score
+    let scoring_start = Instant::now();
     println!("Scoring");
     let score = human_solver(&mut grid);
-    println!("Score: {score}");
+    println!(
+        "Score: {score} found in {:?} micros",
+        scoring_start.elapsed().as_micros()
+    );
 
     // no we have made a perfectly valid puzzle
     return grid;

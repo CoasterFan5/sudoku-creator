@@ -13,21 +13,14 @@ pub fn greedy_remover(g: &mut Grid) -> &mut Grid {
 
     index_vec.shuffle(&mut rng);
 
-    let mut has_removed: bool = true;
-
-    while has_removed {
-        has_removed = false;
-        for index in &index_vec {
-            let old_value = g.get_value(*index);
-            if old_value == 0 {
-                continue;
-            }
-            g.place_value(*index, 0);
-            if solve_game(g) {
-                has_removed = true;
-            } else {
-                g.place_value(*index, old_value);
-            }
+    for index in &index_vec {
+        let old_value = g.get_value(*index);
+        if old_value == 0 {
+            continue;
+        }
+        g.place_value(*index, 0);
+        if !solve_game(g) {
+            g.place_value(*index, old_value);
         }
     }
 

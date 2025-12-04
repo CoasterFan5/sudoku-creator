@@ -2,6 +2,8 @@
  * Take in a non-mut grid return true if it's solvable and false if not
  */
 
+use std::cmp;
+
 use crate::grid::Grid;
 
 pub fn solve_game(grid: &mut Grid) -> bool {
@@ -13,6 +15,12 @@ pub fn solve_game(grid: &mut Grid) -> bool {
             zero_index_vec.push(i);
         }
     }
+
+    /*zero_index_vec.sort_by(|a, b| {
+        return (grid.get_valid_placements(*a).len() as i16
+            - grid.get_valid_placements(*b).len() as i16)
+            .cmp(&(*a as i16));
+    });*/
 
     let solution_count = solver(grid, 0, &zero_index_vec);
     return solution_count == 1;

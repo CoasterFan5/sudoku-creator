@@ -4,6 +4,7 @@ use crate::grid_utils::{
 
 pub struct Grid {
     pub values: [u16; 81],
+    cell_masks: [u16; 81],
     row_valid_items: [u16; 9],
     col_valid_items: [u16; 9],
     house_valid_items: [u16; 9],
@@ -18,6 +19,7 @@ impl Grid {
             row_valid_items: [0b111111111; 9],
             col_valid_items: [0b111111111; 9],
             house_valid_items: [0b111111111; 9],
+            cell_masks: [0b111111111; 81],
         };
     }
 
@@ -49,7 +51,6 @@ impl Grid {
     #[allow(dead_code)]
     pub fn load_str(&mut self, s: &'static str) -> bool {
         let vals: Vec<char> = s.chars().collect();
-        println!("{:?}", vals);
         let mut items: [usize; 81] = [0; 81];
         for i in 0..81 {
             let val = vals[i].to_digit(10);
@@ -62,6 +63,13 @@ impl Grid {
         }
         self.load(items);
         return true;
+    }
+
+    /**
+     * This can not be reversed
+     */
+    pub fn deny_cell_candidate(&mut self, true_index: usize, v: CellValue) {
+        self.cell_masks[true_index] = self.cell_masks[true_index] & !v;
     }
 
     pub fn place_value(&mut self, cell_index: usize, value: CellValue) {
@@ -95,11 +103,13 @@ impl Grid {
         col_index: usize,
     ) -> Vec<u16> {
         let house_index = (row_index / 3) * 3 + (col_index / 3);
+        let true_index = (row_index * 9) + col_index;
 
         let mut out: Vec<u16> = vec![];
         let mask = self.row_valid_items[row_index]
             & self.col_valid_items[col_index]
-            & self.house_valid_items[house_index];
+            & self.house_valid_items[house_index]
+            & self.cell_masks[true_index];
 
         for i in 0..9 {
             if (1 << i) & mask != 0 {
@@ -134,7 +144,7 @@ impl Grid {
 
     pub fn is_solved(&self) -> bool {
         for i in 0..81 {
-            if self.get_value(i) != 0 {
+            if self.get_value(i) == 0 {
                 return false;
             }
         }
@@ -173,4 +183,24 @@ fn test_grid_load_str_equals_grid_load() {
     );
 
     assert!(g.get_values() == g2.get_values());
+}
+
+#[test]
+fn test_is_grid_solved() {
+    let g = &mut Grid::new();
+    let g2 = &mut Grid::new();
+    g.load_str("694527183517348269238961457163895742452176398879432516321659874945783621786214935");
+    g2.load_str(
+        "694527183517348269238961457163895742452176398879432516321659874945783621786214930",
+    );
+
+    assert!(g.is_solved());
+    assert!(!g2.is_solved())
+}
+
+#[test]
+fn test_deny_cell_candidate() {
+    let g = &mut Grid::new();
+    g.deny_cell_candidate(0, 0b100000000);
+    assert!(!g.get_valid_placements(0).contains(&0b100000000))
 }

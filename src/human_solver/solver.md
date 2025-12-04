@@ -18,8 +18,18 @@ Ex: 0 0 0 0 0 0 0 0 0 0 3 0 0 4 9 8 0 0 8 6 0 0 0 0 9 0 2 0 1 4 3 0 0 0 7 6 0 0 
 
 r4c1
 
+## Difficulty Levels
+
+```
+Easy <= 200,
+Medium <= 300,
+Hard <= 400,
+Very Hard <= 500,
+Extreme >= 1000
+
 ## Scoring Values
 ```
 Naked Single: 1
-Hidden Single: 5
+Hidden Single: 3
+Locked Candidates: 10
 ```

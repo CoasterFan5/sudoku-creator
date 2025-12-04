@@ -6,11 +6,20 @@ mod remover;
 mod solver;
 
 use crate::{
-    greedy_remover::greedy_remover, grid::Grid, human_solver::human_solver, solver::solve_game,
+    greedy_remover::greedy_remover,
+    grid::Grid,
+    human_solver::{HumanSolverResponse, human_solver},
+    solver::solve_game,
 };
 use rand::prelude::*;
 
 use std::time::Instant;
+
+struct GenerationResult {
+    human_solver_response: HumanSolverResponse,
+    unsolved_puzzle: Grid,
+    solved_puzzle: Grid,
+}
 
 /*
  * This function needs to take in a grid and return true or false if a number is placed, then call itself on the next cell
@@ -40,40 +49,35 @@ fn fill_grid(grid: &mut Grid, cell_index: usize, rng: &mut ThreadRng) -> bool {
     return false;
 }
 
-fn generate() -> Grid {
+fn generate() -> GenerationResult {
     let mut rng = rand::rng();
     let mut grid = Grid::new();
 
-    let mut start = Instant::now();
     fill_grid(&mut grid, 0, &mut rng);
-    let elapsed = start.elapsed().as_micros();
-    println!("Generated raw in {elapsed} micros");
-    println!("Starting remover...");
-    let removal_start = Instant::now();
-    greedy_remover(&mut grid);
-    println!(
-        "Removal done in {:?} micros",
-        removal_start.elapsed().as_micros()
-    );
-    grid.display();
 
-    println!("Checking validity last time.");
+    let start = Instant::now();
+
+    greedy_remover(&mut grid);
+
+    println!(
+        "Greedy removal done in {:?} micros",
+        start.elapsed().as_micros()
+    );
 
     if !solve_game(&mut grid) {
         println!("Game invalid")
     }
 
-    // we need to get the score
-    let scoring_start = Instant::now();
-    println!("Scoring");
-    let score = human_solver(&mut grid);
-    println!(
-        "Score: {score} found in {:?} micros",
-        scoring_start.elapsed().as_micros()
-    );
+    let unsolved = grid.get_clone();
 
+    // we need to get the score
+    let score = human_solver(&mut grid);
     // no we have made a perfectly valid puzzle
-    return grid;
+    return GenerationResult {
+        human_solver_response: score,
+        unsolved_puzzle: unsolved,
+        solved_puzzle: grid,
+    };
 }
 
 /* fn save_puzzle(g: &mut GenerationResult) -> serde_json::Result<()> {
@@ -99,8 +103,30 @@ fn generate() -> Grid {
 } */
 
 fn main() {
-    //loop {
-    generate();
+    let mut high_score = -1;
+    let mut best: Option<GenerationResult> = None;
+    for i in 0..1000 {
+        let res = generate();
+        if res.human_solver_response.score >= high_score {
+            high_score = res.human_solver_response.score;
+            best = Some(res);
+        };
+        println!("Done with {i}")
+    }
+
+    println!("Best score: {high_score}");
+    match best {
+        None => {
+            println!("Best was never initalzied")
+        }
+        Some(v) => {
+            for item in v.human_solver_response.techniques_used {
+                println!("{item}")
+            }
+            v.unsolved_puzzle.display();
+            v.solved_puzzle.display();
+        }
+    }
 
     //let a = save_puzzle(puzzle);
 

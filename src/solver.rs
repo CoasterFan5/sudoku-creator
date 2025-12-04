@@ -2,8 +2,6 @@
  * Take in a non-mut grid return true if it's solvable and false if not
  */
 
-use std::cmp;
-
 use crate::grid::Grid;
 
 pub fn solve_game(grid: &mut Grid) -> bool {
@@ -15,12 +13,6 @@ pub fn solve_game(grid: &mut Grid) -> bool {
             zero_index_vec.push(i);
         }
     }
-
-    /*zero_index_vec.sort_by(|a, b| {
-        return (grid.get_valid_placements(*a).len() as i16
-            - grid.get_valid_placements(*b).len() as i16)
-            .cmp(&(*a as i16));
-    });*/
 
     let solution_count = solver(grid, 0, &zero_index_vec);
     return solution_count == 1;
@@ -44,22 +36,25 @@ fn solver(grid: &mut Grid, zero_index: usize, zero_index_vec: &Vec<usize>) -> i3
         return solver(grid, zero_index + 1, zero_index_vec);
     }
 
-    // get the possible values
-    let possible_values = grid.get_valid_placements(index);
+    let mut mask = grid.get_valid_mask(index);
 
-    if possible_values.is_empty() {
+    if mask == 0 {
         return 0;
     }
 
     let mut total = 0;
 
-    for v in possible_values {
-        grid.place_value(index, v);
+    while mask != 0 {
+        let pick = mask & (!mask + 1); // isolate lowest bit
+        mask &= mask - 1;
+
+        grid.place_value(index, pick);
         total += solver(grid, zero_index + 1, zero_index_vec);
         if total >= 2 {
             break;
         }
     }
+
     grid.place_value(index, 0b0);
 
     return total;

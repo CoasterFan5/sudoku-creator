@@ -18,10 +18,15 @@ struct HumanSolveTechnique {
     human_name: &'static str,
 }
 
+pub struct HumanSolverResponse {
+    pub score: i32,
+    pub techniques_used: Vec<String>,
+}
+
 /*
  * Takes in a grid and returns the score using human solvers
  */
-pub fn human_solver(grid: &mut Grid) -> i32 {
+pub fn human_solver(grid: &mut Grid) -> HumanSolverResponse {
     let mut techniques_used: Vec<String> = vec![];
 
     let human_solve_techiques = [
@@ -60,9 +65,6 @@ pub fn human_solver(grid: &mut Grid) -> i32 {
         if used_technique {
             continue;
         }
-        for str in techniques_used {
-            println!("{str}");
-        }
         if !grid.is_solved() {
             println!("Failed to solve!");
         }
@@ -70,5 +72,8 @@ pub fn human_solver(grid: &mut Grid) -> i32 {
         break;
     }
 
-    return score;
+    return HumanSolverResponse {
+        score,
+        techniques_used,
+    };
 }

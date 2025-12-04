@@ -23,6 +23,17 @@ impl Grid {
         };
     }
 
+    pub fn get_clone(&mut self) -> Grid {
+        let mut new_grid = Grid::new();
+        new_grid.values = self.values;
+        new_grid.row_valid_items = self.row_valid_items;
+        new_grid.col_valid_items = self.col_valid_items;
+        new_grid.house_valid_items = self.house_valid_items;
+        new_grid.cell_masks = self.cell_masks;
+
+        return new_grid;
+    }
+
     #[allow(dead_code)]
     pub fn load(&mut self, values: [usize; 81]) {
         for (index, item) in values.iter().enumerate() {
@@ -97,12 +108,25 @@ impl Grid {
         }
     }
 
+    pub fn get_valid_mask(&self, cell_index: usize) -> CellValue {
+        let row_index = row_index_from_true_index(cell_index);
+        let col_index = col_index_from_true_index(cell_index);
+        let house_index = house_index_from_row_col(row_index, col_index);
+
+        let mask = self.row_valid_items[row_index]
+            & self.col_valid_items[col_index]
+            & self.house_valid_items[house_index]
+            & self.cell_masks[cell_index];
+
+        return mask;
+    }
+
     pub fn get_valid_placements_with_row_col(
         &self,
         row_index: usize,
         col_index: usize,
     ) -> Vec<u16> {
-        let house_index = (row_index / 3) * 3 + (col_index / 3);
+        let house_index = house_index_from_row_col(row_index, col_index);
         let true_index = (row_index * 9) + col_index;
 
         let mut out: Vec<u16> = vec![];
